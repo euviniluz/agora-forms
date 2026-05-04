@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scripts de Reunião — AgOra</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --surface2: #F2F1ED;
+    --border: #E4E2DA;
+    --border2: #D0CEC5;
+    --text: #1A1916;
+    --text2: #5C5A54;
+    --text3: #9C9A94;
+    --purple: #6B5CE7;
+    --purple-bg: #F0EEFF;
+    --teal: #0E9F72;
+    --teal-bg: #E8FBF4;
+    --coral: #E05A3A;
+    --coral-bg: #FFF1EE;
+    --amber: #C47D1A;
+    --amber-bg: #FFF8EC;
+    --blue: #2A7FDE;
+    --blue-bg: #EEF6FF;
+    --gray: #7C7A74;
+    --gray-bg: #F2F1ED;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 32px 24px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .container { max-width: 780px; margin: 0 auto; }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px;
+    margin-bottom: 24px;
+    width: fit-content;
+  }
+  .tab {
+    padding: 8px 22px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text3);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .tab:hover { color: var(--text2); background: var(--surface); }
+  .tab.active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .tab-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  }
+
+  /* PAGE */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* HEADER CARD */
+  .header-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 28px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .header-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .header-info { flex: 1; }
+  .header-title {
+    font-size: 20px; font-weight: 600; color: var(--text);
+    margin-bottom: 3px;
+  }
+  .header-meta { font-size: 12px; color: var(--text3); display: flex; gap: 12px; flex-wrap: wrap; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 500; font-family: 'DM Mono', monospace;
+  }
+
+  /* SECTION */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+  .section-accent {
+    width: 3px; height: 18px; border-radius: 2px; flex-shrink: 0;
+  }
+  .section-title {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; flex: 1;
+  }
+  .section-chevron {
+    font-size: 12px; color: var(--text3); transition: transform 0.2s;
+  }
+  .section-body { padding: 16px 20px; }
+  .section.collapsed .section-body { display: none; }
+  .section.collapsed .section-chevron { transform: rotate(-90deg); }
+
+  /* FIELDS */
+  .fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 20px;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label {
+    font-size: 12px; font-weight: 500; color: var(--text2);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .field label span { font-size: 14px; }
+  input[type=text], textarea, select {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    width: 100%;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+    resize: vertical;
+  }
+  input[type=text]:focus, textarea:focus, select:focus {
+    border-color: var(--border2);
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.04);
+    background: var(--surface);
+  }
+  textarea { min-height: 64px; line-height: 1.5; }
+
+  /* OPTION PILLS */
+  .options { display: flex; flex-wrap: wrap; gap: 6px; }
+  .option {
+    padding: 5px 13px; border: 1px solid var(--border);
+    border-radius: 20px; font-size: 12px; font-weight: 500;
+    color: var(--text2); cursor: pointer;
+    background: var(--surface2);
+    transition: all 0.12s; user-select: none;
+  }
+  .option:hover { border-color: var(--border2); color: var(--text); }
+
+  /* CHECKLIST */
+  .checklist { display: flex; flex-direction: column; gap: 2px; }
+  .check-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 9px 12px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: background 0.12s;
+    border: 1px solid transparent;
+  }
+  .check-item:hover { background: var(--surface2); }
+  .check-item.done { background: var(--teal-bg); border-color: rgba(14,159,114,0.15); }
+  .check-box {
+    width: 18px; height: 18px; border-radius: 5px;
+    border: 1.5px solid var(--border2);
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.15s;
+  }
+  .check-item.done .check-box {
+    background: var(--teal); border-color: var(--teal);
+  }
+  .check-label {
+    font-size: 13px; color: var(--text); transition: all 0.15s;
+  }
+  .check-item.done .check-label {
+    color: var(--text3); text-decoration: line-through;
+  }
+  .check-icon { display: none; }
+  .check-item.done .check-icon { display: block; }
+
+  /* DIVIDER */
+  .div { height: 1px; background: var(--border); margin: 14px 0; }
+
+  /* NUMBERED FIELDS */
+  .num-fields { display: flex; flex-direction: column; gap: 12px; counter-reset: num; }
+  .num-field {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 10px;
+    align-items: start;
+    counter-increment: num;
+  }
+  .num-field::before {
+    content: counter(num);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; color: var(--text3);
+    padding-top: 9px; text-align: right;
+  }
+
+  /* SAVE BAR */
+  .save-bar {
+    display: flex; justify-content: flex-end; gap: 10px;
+    padding: 16px 0; margin-top: 8px;
+  }
+  .btn {
+    padding: 9px 20px; border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; border: none;
+  }
+  .btn-secondary {
+    background: var(--surface2); color: var(--text2);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--border); color: var(--text); }
+  .btn-primary {
+    background: var(--text); color: var(--surface);
+  }
+  .btn-primary:hover { opacity: 0.85; }
+
+  /* STATUS TAG */
+  .status-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 500;
+  }
+  .status-dot-sm { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* PROGRESS */
+  .progress-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px; padding: 10px 14px;
+    background: var(--surface2); border-radius: var(--radius-sm);
+  }
+  .progress-bar-wrap {
+    flex: 1; height: 4px; background: var(--border);
+    border-radius: 2px; overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%; border-radius: 2px;
+    transition: width 0.3s;
+  }
+  .progress-label { font-size: 12px; color: var(--text3); min-width: 32px; text-align: right; font-family: 'DM Mono', monospace; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('ob', this)">
+      <div class="tab-dot" style="background:#6B5CE7"></div>
+      Onboarding
+    </button>
+    <button class="tab" onclick="showTab('br', this)">
+      <div class="tab-dot" style="background:#0E9F72"></div>
+      Briefing
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       ONBOARDING
+  ══════════════════════════════════════════ -->
+  <div id="ob" class="page active">
+
+    <div class="header-card">
+      <div class="header-icon" style="background:#F0EEFF">🤝</div>
+      <div class="header-info">
+        <div class="header-title">Onboarding</div>
+        <div class="header-meta">
+          <span>Conduzido por Bruno</span>
+          <span>·</span>
+          <span>Fase 2 — Onboarding</span>
+          <span>·</span>
+          <span class="badge" style="background:#F0EEFF;color:#6B5CE7">~45 min</span>
+        </div>
+      </div>
+      <div class="status-tag" style="background:#FFF1EE;color:#E05A3A">
+        <div class="status-dot-sm" style="background:#E05A3A"></div>
+        A iniciar
+      </div>
+    </div>
+
+    <!-- Progresso do checklist -->
+    <div class="progress-row">
+      <span style="font-size:12px;color:var(--text3)">Conclusão</span>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="ob-progress" style="width:0%;background:#0E9F72"></div>
+      </div>
+      <span class="progress-label" id="ob-progress-label">0%</span>
+    </div>
+
+    <!-- Informações -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-accent" style="background:#6B5CE7"></div>
+        <span class="section-title" style="color:#6B5CE7">📋 Informações da reunião</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="fields-grid">
+          <div class="field">
+            <label><span>📅</span> Data:</label>
+            <input type="text" placeholder="DD/MM/AAAA">
+          </div>
+          <div class="field">
+            <label><span>⏰</span> Horário:</label>
+            <input type="text" placeholder="00h00">
+          </div>
+          <div class="field">
+            <label><span>👤</span> Conduzido por:</label>
+            <input type="text" placeholder="Nome">
+          </div>
+          <div class="field">
+            <label><span>🏢</span> Participantes do cliente:</label>
+            <input type="text" placeholder="Nomes">
+          </div>
+          <div class="field full">
+            <label><span>💻</span> Plataforma:</label>
+            <div class="options" id="ob-plataforma">
+              <div class="option" onclick="toggleOption(this,'ob-plataforma',true)">Google Meet</div>
+              <div class="option" onclick="toggleOption(this,'ob-plataforma',true)">Zoom</div>
+              <div class="option" onclick="toggleOption(this,'ob-plataforma',true)">Teams</div>
+              <div class="option" onclick="toggleOption(this,'ob-plataforma',true)">Presencial</div>
+            </div>
+          </div>
+          <div class="field full">
+            <label><span>🎥</span> Link da gravação:</label>
+            <input type="text" placeholder="Cole o link aqui">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comunicação -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-accent" style="background:#0E9F72"></div>
+        <span class="section-title" style="color:#0E9F72">📞 Comunicação</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="fields-grid">
+          <div class="field">
+            <label><span>👤</span> Contato principal:</label>
+            <input type="text" placeholder="Nome">
+          </div>
+          <div class="field">
+            <label><span>📱</span> WhatsApp:</label>
+            <input type="text" placeholder="(00) 00000-0000">
+          </div>
+          <div class="field full">
+            <label><span>📧</span> E-mail:</label>
+            <input type="text" placeholder="email@cliente.com">
+          </div>
+          <div class="field full">
+            <label><span>💬</span> Canal oficial combinado:</label>
+            <div class="options" id="ob-canal">
+              <div class="option" onclick="toggleOption(this,'ob-canal',true)">WhatsApp</div>
+              <div class="option" onclick="toggleOption(this,'ob-canal',true)">E-mail</div>
+              <div class="option" onclick="toggleOption(this,'ob-canal',true)">Outro</div>
+            </div>
+          </div>
+          <div class="field full">
+            <label><span>⏱</span> Prazo de retorno para aprovações:</label>
+            <div class="options" id="ob-prazo">
+              <div class="option" onclick="toggleOption(this,'ob-prazo',true)">24h</div>
+              <div class="option" onclick="toggleOption(this,'ob-prazo',true)">48h</div>
+              <div class="option" onclick="toggleOption(this,'ob-prazo',true)">72h</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cadência -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-accent" style="background:#E05A3A"></div>
+        <span class="section-title" style="color:#E05A3A">📆 Cadência</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="fields-grid">
+          <div class="field">
+            <label><span>🗓</span> Dia da Weekly:</label>
+            <input type="text" placeholder="Ex: terça-feira">
+          </div>
+          <div class="field">
+            <label><span>⏰</span> Horário da Weekly:</label>
+            <input type="text" placeholder="Ex: 09h00">
+          </div>
+          <div class="field full">
+            <label><span>📝</span> Data do Briefing agendada:</label>
+            <input type="text" placeholder="DD/MM/AAAA às __h__">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Observações -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-accent" style="background:#C47D1A"></div>
+        <span class="section-title" style="color:#C47D1A">💬 Observações</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label><span>📌</span> Anotações gerais:</label>
+          <textarea placeholder="Pontos importantes, combinados, contextos da reunião..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Checklist -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-accent" style="background:#7C7A74"></div>
+        <span class="section-title" style="color:#7C7A74">✅ Checklist de conclusão</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="checklist" id="ob-checklist">
+          <div class="check-item" onclick="toggleCheck(this,'ob')">
+            <div class="check-box"><svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="check-label">Weekly cadastrada no calendário</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'ob')">
+            <div class="check-box"><svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="check-label">Briefing agendado</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'ob')">
+            <div class="check-box"><svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="check-label">Link do Doc Master enviado ao cliente</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'ob')">
+            <div class="check-box"><svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="check-label">Formulário de coleta de materiais enviado (Joãozinho)</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'ob')">
+            <div class="check-box"><svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="check-label">Status da task alterado para "Concluído"</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       BRIEFING
+  ══════════════════════════════════════════ -->
+  <div id="br" class="page">
+
+    <div class="header-card">
+      <div class="header-icon" style="background:#E8FBF4">📝</div>
+      <div class="header-info">
+        <div class="header-title">Briefing</div>
+        <div class="header-meta">
+          <span>Conduzido por Gabriel</span>
+          <span>·</span>
+          <span>Fase 2 — Onboarding</span>
+          <span>·</span>
+          <span class="badge" style="background:#E8FBF4;color:#0E9F72">~1h30</span>
+        </div>
+      </div>
+      <div class="status-tag" style="background:#FFF1EE;color:#E05A3A">
+        <div class="status-dot-sm" style="background:#E05A3A"></div>
+        A iniciar
+      </div>
+    </div>
+
+    <div class="progress-row">
+      <span style="font-size:12px;color:var(--text3)">Conclusão</span>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="br-progress" style="width:0%;background:#0E9F72"></div>
+      </div>
+      <span class="progress-label" id="br-progress-label">0%</span>
+    </div>
+
+    <!-- Info reunião -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-accent" style="background:#6B5CE7"></div>
+        <span class="section-title" style="color:#6B5CE7">📋 Informações da reunião</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="fields-grid">
+          <div class="field"><label><span>📅</span> Data:</label><input type="text" placeholder="DD/MM/AAAA"></div>
+          <div class="field"><label><span>⏰</span> Horário:</label><input type="text" placeholder="00h00"></div>
+          <div class="field"><label><span>👤</span> Conduzido por:</label><input type="text" placeholder="Gabriel"></div>
+          <div class="field"><label><span>🏢</span> Participantes do cliente:</label><input type="text" placeholder="Nomes"></div>
+          <div class="field full"><label><span>🎥</span> Link da gravação:</label><input type="text" placeholder="Cole o link aqui"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A Marca -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-accent" style="background:#0E9F72"></div>
+        <span class="section-title" style="color:#0E9F72">🏷 A marca</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="num-fields">
+          <div class="num-field"><div class="field" style="min-width:0"><label><span>📖</span> História da marca:</label><textarea placeholder="Como surgiu, trajetória..."></textarea></div></div>
+          <div class="num-field"><div class="field" style="min-width:0"><label><span>🛍</span> Produto ou serviço principal:</label><textarea placeholder="O que vende, como funciona..."></textarea></div></div>
+          <div class="num-field"><div class="field" style="min-width:0"><label><span>⚡</span> Diferencial em relação à concorrência:</label><textarea placeholder="O que os torna únicos..."></textarea></div></div>
+          <div class="num-field"><div class="field" style="min-width:0"><label><span>🔍</span> Principais concorrentes:</label><input type="text" placeholder="1. ___ · 2. ___ · 3. ___"></div></div>
+          <div class="num-field"><div class="field" style="min-width:0"><label><span>💡</span> O que fazem que nenhum concorrente faz:</label><textarea placeholder="Diferencial exclusivo..."></textarea></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cliente final -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-accent" style="background:#E05A3A"></div>
+        <span class="section-title" style="color:#E05A3A">👥 Cliente final</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="num-fields" style="counter-reset:num 5">
+          <div class="num-field"><div class="field" style="min-width:0"><label><span>🎯</span> Perfil do cliente ideal:</label><textarea placeholder="Quem é, comportamento, contexto..."></textarea></div></div>
+          <div class="num-field"><div class="field" style="min-width:0"><label><span>😣</span> Principal dor ou desejo que a marca resolve:</label><textarea placeholder="O problema central..."></textarea></div></div>
+          <div class="num-field"><div class="field" style="min-width:0"><label><span>🛒</span> Ocasião de compra:</label><textarea placeholder="Quando e por que compram..."></textarea></div></div>
+          <div class="num-field">
+            <div style="min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="field"><label><span>💰</span> Ticket médio:</label><input type="text" placeholder="R$ ___"></div>
+              <div class="field"><label><span>🏆</span> Produto mais vendido:</label><input type="text" placeholder="Nome"></div>
+            </div>
+          </div>
+          <div class="num-field">
+            <div class="field" style="min-width:0">
+              <label><span>📲</span> Canal principal de vendas:</label>
+              <div class="options" id="br-canal">
+                <div class="option" onclick="toggleOption(this,'br-canal',true)">Instagram DM</div>
+                <div class="option" onclick="toggleOption(this,'br-canal',true)">WhatsApp</div>
+                <div class="option" onclick="toggleOption(this,'br-canal',true)">Site</div>
+                <div class="option" onclick="toggleOption(this,'br-canal',true)">iFood</div>
+                <div class="option" onclick="toggleOption(this,'br-canal',true)">Presencial</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Histórico de marketing -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-accent" style="background:#C47D1A"></div>
+        <span class="section-title" style="color:#C47D1A">📊 Histórico de marketing</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="num-fields" style="counter-reset:num 10">
+          <div class="num-field"><div class="field" style="min-width:0"><label><span>🗂</span> O que já foi feito:</label><textarea placeholder="Ações passadas..."></textarea></div></div>
+          <div class="num-field"><div class="field" style="min-width:0"><label><span>✅</span> O que funcionou e por quê:</label><textarea placeholder="Resultados positivos..."></textarea></div></div>
+          <div class="num-field"><div class="field" style="min-width:0"><label><span>❌</span> O que não funcionou e por quê:</label><textarea placeholder="Resultados negativos..."></textarea></div></div>
+          <div class="num-field">
+            <div style="min-width:0;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
+              <div class="field"><label><span>📸</span> Instagram:</label><input type="text" placeholder="0"></div>
+              <div class="field"><label><span>👍</span> Facebook:</label><input type="text" placeholder="0"></div>
+              <div class="field"><label><span>🎵</span> TikTok:</label><input type="text" placeholder="0"></div>
+              <div class="field"><label><span>▶️</span> YouTube:</label><input type="text" placeholder="0"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tom de voz -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-accent" style="background:#2A7FDE"></div>
+        <span class="section-title" style="color:#2A7FDE">🎨 Tom de voz e identidade</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="num-fields" style="counter-reset:num 14">
+          <div class="num-field"><div class="field" style="min-width:0"><label><span>🗣</span> Como a marca fala:</label><textarea placeholder="Tom, linguagem, personalidade..."></textarea></div></div>
+          <div class="num-field"><div class="field" style="min-width:0"><label><span>✨</span> Marcas de referência que admira:</label><input type="text" placeholder="1. ___ · 2. ___ · 3. ___"></div></div>
+          <div class="num-field"><div class="field" style="min-width:0"><label><span>🚫</span> O que NÃO quer ver no conteúdo:</label><textarea placeholder="Restrições, palavras proibidas..."></textarea></div></div>
+          <div class="num-field">
+            <div class="field" style="min-width:0">
+              <label><span>🙋</span> A marca aparece com rosto?</label>
+              <div class="options" id="br-rosto">
+                <div class="option" onclick="toggleOption(this,'br-rosto',true)">Sim — fundador</div>
+                <div class="option" onclick="toggleOption(this,'br-rosto',true)">Sim — equipe</div>
+                <div class="option" onclick="toggleOption(this,'br-rosto',true)">Não</div>
+                <div class="option" onclick="toggleOption(this,'br-rosto',true)">Misto</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Objetivos -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-accent" style="background:#E05A3A"></div>
+        <span class="section-title" style="color:#E05A3A">🎯 Objetivos e meta SMART</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="num-fields" style="counter-reset:num 18">
+          <div class="num-field"><div class="field" style="min-width:0"><label><span>🏁</span> Objetivo principal dos próximos 3 meses:</label><textarea placeholder="O que quer atingir..."></textarea></div></div>
+          <div class="num-field">
+            <div style="min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="field"><label><span>💵</span> Faturamento mensal atual:</label><input type="text" placeholder="R$ ___"></div>
+              <div class="field"><label><span>📦</span> Pedidos/clientes por mês:</label><input type="text" placeholder="___"></div>
+            </div>
+          </div>
+          <div class="num-field">
+            <div style="min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div class="field"><label><span>📈</span> Faturamento desejado em 3 meses:</label><input type="text" placeholder="R$ ___"></div>
+              <div class="field"><label><span>🎯</span> Pedidos desejados:</label><input type="text" placeholder="___"></div>
+            </div>
+          </div>
+          <div class="num-field"><div class="field" style="min-width:0"><label><span>🧱</span> Principal gargalo de crescimento:</label><textarea placeholder="O que está travando..."></textarea></div></div>
+          <div class="num-field"><div class="field" style="min-width:0"><label><span>💸</span> Investimento mensal em tráfego pago:</label><input type="text" placeholder="R$ ___"></div></div>
+          <div class="num-field"><div class="field" style="min-width:0"><label><span>📌</span> Datas importantes no próximo trimestre:</label><textarea placeholder="Datas sazonais, lançamentos, eventos..."></textarea></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Checklist -->
+    <div class="section">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-accent" style="background:#7C7A74"></div>
+        <span class="section-title" style="color:#7C7A74">✅ Checklist de conclusão</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="checklist" id="br-checklist">
+          <div class="check-item" onclick="toggleCheck(this,'br')">
+            <div class="check-box"><svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="check-label">Todos os campos preenchidos</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'br')">
+            <div class="check-box"><svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="check-label">Gravação salva no Drive (/02-Reuniões)</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'br')">
+            <div class="check-box"><svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="check-label">Gabriel iniciou rascunho do Posicionamento</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'br')">
+            <div class="check-box"><svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="check-label">Workshop Estratégico agendado</span>
+          </div>
+          <div class="check-item" onclick="toggleCheck(this,'br')">
+            <div class="check-box"><svg class="check-icon" width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <span class="check-label">Status da task alterado para "Concluído"</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function showTab(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function toggleSection(header) {
+  header.parentElement.classList.toggle('collapsed');
+}
+
+function toggleOption(el, groupId, single) {
+  if (single) {
+    document.querySelectorAll('#' + groupId + ' .option').forEach(o => o.classList.remove('selected'));
+  }
+  el.classList.toggle('selected');
+  updateOptionStyle(el, groupId);
+}
+
+function updateOptionStyle(el, groupId) {
+  const colors = {
+    'ob-plataforma': '#6B5CE7',
+    'ob-canal': '#0E9F72',
+    'ob-prazo': '#0E9F72',
+    'br-canal': '#E05A3A',
+    'br-rosto': '#2A7FDE'
+  };
+  const bg = {
+    'ob-plataforma': '#F0EEFF',
+    'ob-canal': '#E8FBF4',
+    'ob-prazo': '#E8FBF4',
+    'br-canal': '#FFF1EE',
+    'br-rosto': '#EEF6FF'
+  };
+  document.querySelectorAll('#' + groupId + ' .option').forEach(o => {
+    if (o.classList.contains('selected')) {
+      o.style.borderColor = colors[groupId] || '#6B5CE7';
+      o.style.color = colors[groupId] || '#6B5CE7';
+      o.style.background = bg[groupId] || '#F0EEFF';
+    } else {
+      o.style.borderColor = '';
+      o.style.color = '';
+      o.style.background = '';
+    }
+  });
+}
+
+function toggleCheck(item, prefix) {
+  item.classList.toggle('done');
+  updateProgress(prefix);
+}
+
+function updateProgress(prefix) {
+  const items = document.querySelectorAll('#' + prefix + '-checklist .check-item');
+  const done = document.querySelectorAll('#' + prefix + '-checklist .check-item.done');
+  const pct = items.length ? Math.round((done.length / items.length) * 100) : 0;
+  document.getElementById(prefix + '-progress').style.width = pct + '%';
+  document.getElementById(prefix + '-progress-label').textContent = pct + '%';
+}
+</script>
+</body>
+</html>
